@@ -26,3 +26,6 @@ cache/
 # IDE
 .vscode/
 .idea/
+
+#runs directory of EFGW server
+jintrac_runs_jt60sa_reference/
