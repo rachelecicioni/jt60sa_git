@@ -4,6 +4,11 @@ R. Cicioni, 25-05-2025
 Utility to load and inspect data from JETTO/EDGE2D simulation runs.
 Reads binary files (JST, SST1, SST2, SST3, JSP) and TRAN files, prints available data keys/signals.
 
+Example usage:
+    $ python data_available.py <run_directory>
+Or:
+    >>> from data_available import data_available
+    >>> data_available("run_sa_nclass2")
 """
 
 import sys
@@ -91,7 +96,11 @@ def data_available(run_dir):
     return jst, sst1, sst2, sst3, jsp, tran
 
 def main():
-    run_dir = input("Run directory: ").strip()
+    if len(sys.argv) > 1:
+        run_dir = sys.argv[1] # with this line you can run the script from command line with: python data_available.py <run_directory>
+    else:
+        run_dir = input("Run directory: ").strip()
+    
     try:
         jst, sst1, sst2, sst3, jsp, tran = data_available(run_dir)
         print("Data successfully loaded.")
