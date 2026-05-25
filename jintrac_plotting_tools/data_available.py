@@ -2,7 +2,7 @@
 R. Cicioni, 25-05-2025
 
 Utility to load and inspect data from JETTO/EDGE2D simulation runs.
-Reads binary files (JST, SST!, SST2, SST3, JSP) and TRAN files, prints available data keys/signals.
+Reads binary files (JST, SST1, SST2, SST3, JSP) and TRAN files, prints available data keys/signals.
 
 """
 
