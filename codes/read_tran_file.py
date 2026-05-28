@@ -1,7 +1,7 @@
 import eproc as ep
 import numpy as np
 import os
-
+import matplotlib.pyplot as plt
 
 print("=" * 80)
 print("AVAILABLE EPROC FUNCTIONS")
@@ -55,19 +55,36 @@ def inspect_tran():
     if not os.path.exists(TRAN_FILE):
         print("ERROR: tran file not found")
         return
-
+    
     #List of signals in TRAN_FILE
     signals = ep.names(TRAN_FILE) 
     geom = ep.geom(TRAN_FILE)
+    print(geom)
+    #geom.keys()
     
+    '''
     #Type and dimension of selected signal in TRAN_FILE
-    var_sel = input("Name of signal: ")
-    data = ep.data(TRAN_FILE, var_sel) 
-    inspect_datastruct(data, var_sel)
-    print(f"Type data of {var_sel}: {type(data)}")
-    time = ep.time(TRAN_FILE, var_sel)
-    inspect_datastruct(time, var_sel)
-    print(f"Type time of {var_sel}: {type(time)}")
+    #var_sel = input("Name of signal: ")
+    data = ep.data(TRAN_FILE, "TEVE")
+    time = ep.time(TRAN_FILE, "TEVE")
+
+    print("signal:", data.name)
+    print("desc:", data.desc)
+    print("units:", data.units)
+
+    print("nPts =", data.nPts)
+    print(data.nPts)
+    print("time =", data.time)
+    print("timestep =", data.timestep)
+
+    print("len(data) =", len(data.data))
+
+    arr = np.array(data.data)
+
+    print("shape:", arr.shape)
+    print("min/max:", arr.min(), arr.max())
+    '''
 
 if __name__ == "__main__":
     inspect_tran()
+
