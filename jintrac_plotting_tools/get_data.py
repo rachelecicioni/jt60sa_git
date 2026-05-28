@@ -5,11 +5,11 @@ Utility to extract data from JETTO/EDGE2D simulation runs.
 Reads binary files (JST, SST1, SST2, SST3, JSP) and TRAN files, return arrays for plotting.
 
 Example usage:
-    $ python extract_plot_data.py <run_directory>
+    $ python get_data.py <run_directory>
 Or:
-    >>> from extract_plot_data import extract_plot_data
-    >>> extract_plot_data("run_sa_nclass2")
-    >>> x, y = extract_plot_data('JST', 'PRAD', 'run_sa_nclass2')
+    >>> from get_data import get_data
+    >>> get_data("run_sa_nclass2")
+    >>> x, y = get_data('JST', 'PRAD', 'run_sa_nclass2')
 """
 
 import sys
@@ -17,10 +17,10 @@ import os
 import numpy as np
 import jetto_binary_tools
 import eproc as ep
-from data_available import find_run_directory
+from available_data import find_run_directory
 
 
-def extract_plot_data(tipo_dato, nome_variabile, run_dir, sst_number=None, timestep=-1):
+def get_data(tipo_dato, nome_variabile, run_dir, sst_number=None, timestep=-1):
     
     base_path = find_run_directory(run_dir)
     tipo_dato = tipo_dato.upper()
