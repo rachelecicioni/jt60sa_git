@@ -236,6 +236,9 @@ Each segment tuple `(t_enter, t_exit, value)` describes:
 - `t_exit`: Ray parameter at cell exit
 - `value`: Quantity value in that cell
 
+
+
+-->
 ---
 
 ## 2.7 EDGE2D available outputs
@@ -246,8 +249,6 @@ $ edge2d_output.py
 ```
 
 Signals under "Profiles" section can be mapped along arbitrary LoS by changing the `quantity_name` parameter. 
-
--->
 
 # 3. Bibliography and wikipages
 
