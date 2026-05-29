@@ -248,7 +248,7 @@ To list all signals available from an EDGE2D simulation, run:
 $ edge2d_output.py
 ```
 
-Signals under "Profiles" section can be mapped along arbitrary LoS by changing the `quantity_name` parameter. 
+Signals under "Profiles" section can be mapped along arbitrary LoS by changing the PROFILE parameter in jintrac_los_profile.py 
 
 # 3. Bibliography and wikipages
 
