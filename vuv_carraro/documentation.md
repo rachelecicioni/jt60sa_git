@@ -149,7 +149,7 @@ python jintrac_los_profile.py \
     --no-plot \
     --quiet
 ```
-
+<!--
 ### Parameters
 
 | Parameter | Type | Default | Description |
@@ -246,6 +246,8 @@ $ edge2d_output.py
 ```
 
 Signals under "Profiles" section can be mapped along arbitrary LoS by changing the `quantity_name` parameter. 
+
+-->
 
 # 3. Bibliography and wikipages
 
