@@ -1,7 +1,7 @@
 # Integrated modelling for VUV diagnostic for JT-60SA
 
 **Author:** R. Cicioni  (rachele.cicioni@igi.cnr.it)  
-**Last update:** 2026-05-21  
+**Last update:** 2026-05-29  
 
 ---
 
@@ -22,11 +22,16 @@ The modelling work was supervised by L. Garzotti in his role as scientific coord
 1. [JINTRAC simulations](#1-jintrac-simulations)  
    1.1 [What is JINTRAC](#11-what-is-jintrac)  
    1.2 [Impurities modelling in JINTRAC](#12-impurities-modelling-in-jintrac)  
-   1.3 [Simulations list](#2-simulations-list)  
-2. [VUV LOS code](#3-vuv-los-code)  
-   2.1 [How to use it](#31-how-to-use-it)  
-   2.2 [IDL compatibility](#32-idl-compatibility)  
-3. [Bibliography](#4-bibliography)
+   1.3 [Simulations list](#13-simulations-list)  
+2. [VUV LOS code](#2-vuv-los-code)  
+   2.1 [Overview](#21-overview)  
+   2.2 [Usage](#22-usage)  
+   2.3 [Mesh data structure](#23-mesh-data-structure)  
+   2.4 [Available quantities](#24-available-quantities)  
+   2.5 [Output visualization](#25-output-visualization)  
+   2.6 [Return value](#26-return-value)  
+   2.7 [EDGE2D available outputs](#27-edge2d-available-outputs)  
+3. [Bibliography](#3-bibliography-and-wikipages)
 
 ---
 
@@ -84,31 +89,163 @@ List of username and reference person in EFGW (EUROfusion Gateway) cluster:
 
 # 2. VUV LOS code
 
-Python script used for VUV line-of-sight reconstruction:
-`vuv_los_coconut.py`
+## 2.1 Overview
 
-Purpose:
-- reconstruction of VUV LOS signals
-- post-processing of simulation outputs
+The `jintrac_los_profile.py` module performs Line-of-Sight (LoS) reconstruction of any physical quantity (density, temperature, radiation, etc.) from 2D JETTO/JINTRAC simulations.
+
+**Main functionality:**
+- Extract arbitrary physical quantities from JINTRAC tran files
+- Compute intersections of a line of sight with the EDGE2D 2D mesh 
+- Interpolate values along the LoS path
+- Visualize 2D mesh with LoS path and 1D profile plot
+
+**Code structure:**
+1. Load mesh structure (vertices, quadrilaterals)
+2. Load desired physical quantity (temperature, density, etc.)
+3. Map quantity values to mesh centroids using nearest-neighbor search
+4. Define arbitrary LoS geometry (two points in R-Z space)
+5. Compute intersections and extract 1D profile
+6. Generate visualization plots
 
 ---
 
-## 2.1 How to use it
+## 2.2 Usage
 
-Instructions for running the script and required inputs.
+### As a Python module (recommended for integration)
 
-Example:
-```bash
-python vuv_los_coconut.py input_file
+```python
+from jintrac_los_profile import extract_los_profile
+
+result = extract_los_profile(
+    tran_file="/path/to/tran",
+    quantity_name="TEVE",        # Electron temperature
+    point1=[4.5, 0.0],           # LoS start point [R, Z] in meters
+    point2=[3.0, 2.0],           # LoS end point [R, Z] in meters
+    plot=True,                    # Enable visualization
+    verbose=True                  # Detailed console output
+)
+
+# Access results
+segments = result['segments']     # List of (t_enter, t_exit, value)
+values = result['values']         # Full mesh quantity values
 ```
 
+### From command line
+
+```bash
+# Extract electron temperature along specific LoS
+python jintrac_los_profile.py \
+    --tran /path/to/tran \
+    --quantity TEVE \
+    --point1 4.5 0.0 \
+    --point2 3.0 2.0
+
+# Extract electron density without plots
+python jintrac_los_profile.py \
+    --tran /path/to/tran \
+    --quantity NEDE \
+    --point1 5.0 -1.0 \
+    --point2 3.5 1.5 \
+    --no-plot \
+    --quiet
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `tran_file` | str | Required | Path to JINTO TRAN file |
+| `quantity_name` | str | 'TEVE' | Signal name to extract (e.g., 'TEVE', 'NEDE', 'PRADR') |
+| `point1` | [R, Z] | [4.5, 0.0] | LoS starting point in meters |
+| `point2` | [R, Z] | [3.0, 2.0] | LoS ending point in meters |
+| `plot` | bool | True | Generate visualization plots |
+| `verbose` | bool | True | Print detailed information |
+
 ---
 
-## 2.2 IDL compatibility
+## 2.3 Mesh data structure
 
-Notes on compatibility with existing IDL workflows and possible limitations.
+JETTO/JINTRAC stores mesh vertices and centroids in a **quintuple structure**:
+- Every 5 consecutive points: 4 vertices + 1 centroid per quadrilateral cell
+- Data arrays: `RVERTP`, `ZVERTP` (R and Z coordinates)
+- Vertices stored at indices [0, 1, 2, 3], centroid at index [4]
+
+The code automatically reconstructs the mesh topology and maps 1D profile quantities (defined at mesh points) to 2D quad centroids using a KDTree nearest-neighbor search for efficiency.
 
 ---
+
+## 2.4 Available quantities
+
+To list all available quantities in a TRAN file:
+
+```python
+import eproc as ep
+signals = ep.names("/path/to/tran")
+```
+
+Common quantities:
+- **TEVE**: Electron temperature (eV)
+- **NEDE**: Electron density (m⁻³)
+- **NIMP**: Impurity density (m⁻³)
+- **PRADR**: Radiated power density (W/m³)
+- **TEV** + stage number: Temperature per impurity stage (e.g., TEV1 for W stage 1)
+- **NEV** + stage number: Density per impurity stage
+
+Note: Z coordinate in TRAN files is stored negative; the code automatically applies the sign correction.
+
+---
+
+## 2.5 Output visualization
+
+The code generates a single figure with 2 panels:
+
+**Left panel:** 2D mesh colored by quantity value, with LoS path overlay
+- Red line: Line of sight trajectory
+- Green circle: Start point (point1)
+- Magenta circle: End point (point2)
+- Red dots: Centers of intersected mesh cells
+
+**Right panel:** 1D profile plot
+- Y-axis: Quantity value along the path
+- X-axis: Ray parameter `t` (t=0 at point1, t=1 at point2)
+- Colored regions: Values in each intersected cell
+- Gray dashed lines: Cell boundaries
+
+Both panels include colorbars with quantity units automatically extracted from TRAN metadata.
+
+---
+
+## 2.6 Return value
+
+The `extract_los_profile()` function returns a dictionary with:
+
+```python
+{
+    'segments': [(t_enter, t_exit, value), ...],  # List of path segments
+    'nodes': ndarray,                              # Mesh node coordinates
+    'quads': ndarray,                              # Quad connectivity indices
+    'values': ndarray,                             # Quantity at each cell
+    'quantity_name': str,                          # Full quantity description
+    'rmesh': ndarray,                              # R mesh point coordinates
+    'zmesh': ndarray,                              # Z mesh point coordinates
+}
+```
+
+Each segment tuple `(t_enter, t_exit, value)` describes:
+- `t_enter`: Ray parameter at cell entry
+- `t_exit`: Ray parameter at cell exit
+- `value`: Quantity value in that cell
+
+---
+
+## 2.7 EDGE2D available outputs
+
+To list all signals available from an EDGE2D simulation, run:
+```bash
+$ edge2d_output.py
+```
+
+Signals under "Profiles" section can be mapped along arbitrary LoS by changing the `quantity_name` parameter. 
 
 # 3. Bibliography and wikipages
 
