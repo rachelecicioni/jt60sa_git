@@ -23,10 +23,10 @@ import jetto_binary_tools
 import eproc as ep
 import matplotlib.pyplot as plt
 
-#RUN_DIR = "/home/jnv7243/cmg/catalog/edge2d/jt60sa/70000/dec0525/seq#1" #example run on JDC server
+#RUN_DIR = "/home/jnv7243/cmg/catalog/edge2d/jt60sa/70000/may2926/seq#2" #example run on JDC server
 RUN_DIR = "/pfs/work/g2rcicio/edge2d/runs/run_sa_fk_c_WAr_p20_s19_a3_50ms_std" #example run on EFGW server
 TRAN_FILE = os.path.join(RUN_DIR, "tran")
-PROFILE = 'TEVE' #signal name for the temperature profile (can be changed to any other signal available in the TRAN file)
+PROFILE = 'CHII' #signal name for the temperature profile (can be changed to any other signal available in the TRAN file)
 # Define line of sight endpoints
 point1 = np.array([4.5, 0.0]) #line of sight endpoint 1 (can be changed to any other coordinates)
 point2 = np.array([3.0, 2.0]) #line of sight endpoint 2 (can be changed to any other coordinates)
@@ -122,7 +122,7 @@ print(f"  {profile_name} range: {values.min():.2f} - {values.max():.2f}")
 print(f"  Max distance to nearest mesh point: {distances.max():.2e}")
 
 print(f"\nFirst 10 centroids and their {profile_name} values:")
-print(f"{'Quad':>6}  {'R cent':>10}  {'Z cent':>10}  {'R mesh':>10}  {'Z mesh':>10}  {{{profile_name}}:>12}  {'Dist':>10}")
+#print(f"{'Quad':>6}  {'R cent':>10}  {'Z cent':>10}  {'R mesh':>10}  {'Z mesh':>10}  {{{profile_name}}:>12}  {'Dist':>10}")
 print("-" * 72)
 for i in range(min(10, len(centroids))):
     r_cent, z_cent = centroids[i]
@@ -218,7 +218,7 @@ print(f"Point 2: {point2}")
 segments = extract_profile(nodes, quads, values, origin, direction)
 
 print(f"\nNumber of intersected cells: {len(segments)}")
-print(f"\n{'t_enter':>10}  {'t_exit':>10}  {'Δt':>10}  {{{profile_name}}:>10}")
+#print(f"\n{'t_enter':>10}  {'t_exit':>10}  {'Δt':>10}  {{{profile_name}}:>10}")
 print("-" * 42)
 for t_enter, t_exit, val in segments:
     print(f"{t_enter:10.4f}  {t_exit:10.4f}  {t_exit-t_enter:10.4f}  {val:10.4f}")
