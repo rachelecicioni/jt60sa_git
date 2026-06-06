@@ -48,6 +48,11 @@ R0_obj = ep.data(TRAN_FILE, 'R0')
 R0 = R0_obj.data[0]
 print(f"R0 (major radius): {R0:.4f} m")
 
+# Load separatrix position
+R_sep_obj = ep.data(TRAN_FILE, 'RSEPX')
+R_sep = R_sep_obj.data[0]
+print(f"R_sep (separatrix): {R_sep:.4f} m")
+
 # ============================================================================
 # Extract nodes and quads from rvertp/zvertp quintuple structure
 # ============================================================================
@@ -258,6 +263,11 @@ ax.plot([los_start[0], los_end[0]], [los_start[1], los_end[1]],
 ax.plot(*point1, "go", markersize=12, label=f"R0 = {R0:.3f} m", zorder=11, markeredgecolor='darkgreen', markeredgewidth=2)
 ax.plot(*point2, "mo", markersize=12, label=f"R_max = {R_max:.3f} m", zorder=11, markeredgecolor='purple', markeredgewidth=2)
 
+# Mark separatrix position
+z_min = nodes[:, 1].min()
+z_max = nodes[:, 1].max()
+ax.axvline(R_sep, color='cyan', linestyle='--', linewidth=2.5, label=f"Separatrix (R_sep = {R_sep:.3f} m)", zorder=9)
+
 # Mark intersected quad centers
 for t_enter, t_exit, val in segments:
     t_mid = 0.5 * (t_enter + t_exit)
@@ -301,6 +311,9 @@ if len(R_positions) > 0:
     # Plot clean (no colors, just data)
     ax2.plot(R_positions, profile_values, 'o-', linewidth=2, markersize=6, color='black')
     
+    # Mark separatrix position
+    ax2.axvline(R_sep, color='cyan', linestyle='--', linewidth=2.5, label=f"Separatrix (R_sep = {R_sep:.3f} m)")
+    
     ax2.set_xlabel('R (m)', fontsize=12)
     ax2.set_ylabel(f"{profile_name} ({profile_units})", fontsize=12)
     # Restrict xlim to actual data range
@@ -309,6 +322,7 @@ if len(R_positions) > 0:
     margin = 0.02 * (R_max_data - R_min_data)
     ax2.set_xlim(R_min_data - margin, R_max_data + margin)
     ax2.grid(True, alpha=0.3)
+    ax2.legend(fontsize=10)
 else:
     ax2.text(0.5, 0.5, 'No valid profile data', ha='center', va='center', 
              transform=ax2.transAxes, fontsize=12)
@@ -504,32 +518,40 @@ def plot_exponential_fit(fit_result, profile_name, profile_units, R_sep=None, x_
 # ============================================================================
 
 if len(R_positions) > 0:
-    # Prepare data: x = R - R0 (distance from inner edge)
-    x_data = R_positions - R0
-    y_data = profile_values
+    # Filter data for R > R_sep (SOL only)
+    sol_mask = R_positions > R_sep
+    R_positions_sol = R_positions[sol_mask]
+    profile_values_sol = profile_values[sol_mask]
     
-    print(f"\n{'='*70}")
-    print(f"MID-PLANE PROFILE DATA FOR SOL FIT")
-    print(f"{'='*70}")
-    print(f"R0 = {R0:.4f} m")
-    print(f"R range: {R_positions.min():.4f} - {R_positions.max():.4f} m")
-    print(f"x = R - R0 range: {x_data.min():.4f} - {x_data.max():.4f} m")
-    print(f"y ({profile_name}) range: {y_data.min():.4e} - {y_data.max():.4e} {profile_units}")
-    
-    # Perform fit (user can adjust x_min, x_max for SOL window)
-    # For now, use a reasonable default: take points beyond R0 with some margin
-    x_min_fit = 0.0
-    x_max_fit = x_data.max()
-    
-    fit_result = fit_exponential_decay(x_data, y_data, x_min=x_min_fit, x_max=x_max_fit)
-    
-    if fit_result is not None:
-        # Plot the fit
-        fig_fit = plot_exponential_fit(fit_result, profile_name, profile_units)
+    if len(R_positions_sol) > 0:
+        # Prepare data: x = R - R_sep (distance from separatrix)
+        x_data = R_positions_sol - R_sep
+        y_data = profile_values_sol
         
-        try:
-            plt.show()
-        except Exception as e:
-            print(f"Could not display fit plot: {e}")
+        print(f"\n{'='*70}")
+        print(f"MID-PLANE PROFILE DATA FOR SOL FIT")
+        print(f"{'='*70}")
+        print(f"R_sep = {R_sep:.4f} m")
+        print(f"R range (SOL only, R > R_sep): {R_positions_sol.min():.4f} - {R_positions_sol.max():.4f} m")
+        print(f"x = R - R_sep range: {x_data.min():.4f} - {x_data.max():.4f} m")
+        print(f"y ({profile_name}) range: {y_data.min():.4e} - {y_data.max():.4e} {profile_units}")
+        
+        # Perform fit (user can adjust x_min, x_max for SOL window)
+        # For now, use a reasonable default: take points in SOL
+        x_min_fit = 0.0
+        x_max_fit = x_data.max()
+        
+        fit_result = fit_exponential_decay(x_data, y_data, x_min=x_min_fit, x_max=x_max_fit)
+        
+        if fit_result is not None:
+            # Plot the fit
+            fig_fit = plot_exponential_fit(fit_result, profile_name, profile_units)
+            
+            try:
+                plt.show()
+            except Exception as e:
+                print(f"Could not display fit plot: {e}")
+        else:
+            print("Exponential fit could not be performed.")
     else:
-        print("Exponential fit could not be performed.")
+        print(f"No data in SOL (R > R_sep = {R_sep:.4f} m)")
