@@ -528,6 +528,14 @@ if len(R_positions) > 0:
         x_data = R_positions_sol - R_sep
         y_data = profile_values_sol
         
+        # Skip first point for fit (start from second value)
+        if len(x_data) > 1:
+            x_data_fit = x_data[1:]
+            y_data_fit = y_data[1:]
+        else:
+            x_data_fit = x_data
+            y_data_fit = y_data
+        
         print(f"\n{'='*70}")
         print(f"MID-PLANE PROFILE DATA FOR SOL FIT")
         print(f"{'='*70}")
@@ -535,13 +543,14 @@ if len(R_positions) > 0:
         print(f"R range (SOL only, R > R_sep): {R_positions_sol.min():.4f} - {R_positions_sol.max():.4f} m")
         print(f"x = R - R_sep range: {x_data.min():.4f} - {x_data.max():.4f} m")
         print(f"y ({profile_name}) range: {y_data.min():.4e} - {y_data.max():.4e} {profile_units}")
+        print(f"Note: Fit starts from 2nd point (excluding 1st point)")
         
         # Perform fit (user can adjust x_min, x_max for SOL window)
-        # For now, use a reasonable default: take points in SOL
+        # For now, use a reasonable default: take points in SOL (starting from 2nd)
         x_min_fit = 0.0
-        x_max_fit = x_data.max()
+        x_max_fit = x_data_fit.max()
         
-        fit_result = fit_exponential_decay(x_data, y_data, x_min=x_min_fit, x_max=x_max_fit)
+        fit_result = fit_exponential_decay(x_data_fit, y_data_fit, x_min=x_min_fit, x_max=x_max_fit)
         
         if fit_result is not None:
             # Plot the fit
