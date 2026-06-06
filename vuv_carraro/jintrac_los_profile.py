@@ -23,8 +23,8 @@ import jetto_binary_tools
 import eproc as ep
 import matplotlib.pyplot as plt
 
-RUN_DIR = "/home/jnv7243/cmg/catalog/edge2d/jt60sa/70000/may2926/seq#2" #example run on JDC server
-#RUN_DIR = "/pfs/work/g2rcicio/edge2d/runs/run_sa_fk_c_WAr_p20_s19_a3_50ms_std" #example run on EFGW server
+#RUN_DIR = "/home/jnv7243/cmg/catalog/edge2d/jt60sa/70000/may2926/seq#2" #example run on JDC server
+RUN_DIR = "/pfs/work/g2rcicio/edge2d/runs/run_sa_fk_c_WAr_p20_s19_a3_50ms_std" #example run on EFGW server
 TRAN_FILE = os.path.join(RUN_DIR, "tran")
 PROFILE = 'CHII' #signal name for the temperature profile (can be changed to any other signal available in the TRAN file)
 # Define line of sight endpoints
