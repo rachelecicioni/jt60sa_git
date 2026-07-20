@@ -13,7 +13,7 @@ Example usage:
 
 import numpy as np
 import matplotlib.pyplot as plt
-from get_data import get_data
+from available_data import get_data
 
 def multiplot_data(run_dir, signals, figsize=None, title=None, tight_layout=True):
     """
@@ -92,4 +92,4 @@ if __name__ == "__main__":
     
     fig, axs = multiplot_data('run_sa_nclass2', signals, title='Data Analysis Dashboard')
     plt.show()
-    plt.savefig('multiplot_data_example.png', dpi=300)
+    #plt.savefig('multiplot_data_example.png', dpi=300)

@@ -1,13 +1,47 @@
 """
 author: R. Cicioni
-last updated: 06-06-2026
+last updated: 20-07-2026
 
 This code plots the 2D signal map from a JT-60SA edge2d simulation.
-This code can be run in both JDC and EFGW servers, but the path to the TRAN file must be updated accordingly (see RUN_DIR variable).
+This code can be run on both JDC and EFGW servers. The run directory is found
+automatically from the run name entered when the script starts.
 To change the quantity of interest, simply change the value of the 'PROFILE' variable to any other signal available in the TRAN file.
 """
 import sys
 import os
+
+
+def ask_run_name(prompt):
+    """Ask for a non-empty run name."""
+    while True:
+        run_name = input(prompt).strip()
+        if run_name:
+            return run_name
+        print("The run name cannot be empty.")
+
+
+def find_run_directory(run_dir):
+    """Find a run directory in the standard JDC and EFGW locations."""
+    potential_paths = [
+        f"/common/cmg/jnv7243/jetto/runs/{run_dir}",
+        f"/pfs/work/g2rcicio/jetto/runs/{run_dir}",
+        f"/common/cmg/jnv7243/edge2d/runs/{run_dir}",
+        f"/pfs/work/g2rcicio/edge2d/runs/{run_dir}",
+    ]
+
+    for path in potential_paths:
+        if os.path.exists(path):
+            print(f"Run found at: {path}")
+            return path
+
+    raise FileNotFoundError(
+        f"Run '{run_dir}' not found in any of the expected locations:\n"
+        + "\n".join(potential_paths)
+    )
+
+run_name = ask_run_name("Run name: ")
+RUN_DIR = find_run_directory(run_name)
+
 import matplotlib
 matplotlib.use("TkAgg") 
 from matplotlib.patches import Polygon
@@ -23,8 +57,6 @@ import eproc as ep
 import matplotlib.pyplot as plt
 import datetime
 
-#RUN_DIR = "/home/jnv7243/cmg/catalog/edge2d/jt60sa/70000/may2926/seq#2" #example run on JDC server
-RUN_DIR = "/pfs/work/g2rcicio/edge2d/runs/run_sa_fk_c_WAr_p20_s19_a3_50ms_std" #example run on EFGW server
 TRAN_FILE = os.path.join(RUN_DIR, "tran")
 PROFILE = 'QPARTOT' #signal name for the profile (can be changed to any other signal available in the TRAN file)
 

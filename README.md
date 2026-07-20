@@ -42,5 +42,5 @@ jt60sa_git/
 │   └── times_96745.txt
 └── vuv_carraro/
     ├── create_data_lorella.pro
-    └── jetto_output.sav
+    └── jetto_output.sav 
 ```
