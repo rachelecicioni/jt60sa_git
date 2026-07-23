@@ -205,11 +205,13 @@ def fit_lambda_q(radial_positions, heat_flux, r_sep):
         raise ValueError("At least three points beyond the separatrix are required.")
 
     # ln(q) = ln(q0) - x/lambda_q.
-    slope, _ = np.polyfit(distance, np.log(sol_heat_flux), 1)
+    slope, intercept = np.polyfit(distance, np.log(sol_heat_flux), 1)
     if slope >= 0.0:
         raise ValueError("QPARTOT does not decay beyond the separatrix.")
 
-    return -1.0 / slope
+    lambda_q = -1.0 / slope
+    q0 = np.exp(intercept)
+    return lambda_q, q0, distance, sol_heat_flux
 
 def plot_qpartot(data, run_name, r_sep):
     # Plot the 2D QPARTOT map, separatrix and outer mid-plane.
@@ -233,7 +235,7 @@ def plot_qpartot(data, run_name, r_sep):
         markersize=3,
         label="Separatrix",
     )
-    axis.axhline(data["z0"], color="white", linestyle="--", label="OMP: Z=Z0")
+    axis.axhline(data["z0"], color="orange", linestyle="--", label="OMP: Z=Z0")
     axis.plot(r_sep, data["z0"], "ro", label="Outer separatrix")
 
     axis.autoscale()
@@ -245,6 +247,64 @@ def plot_qpartot(data, run_name, r_sep):
     figure.tight_layout()
     return figure, axis
 
+
+def plot_lambda_q_fit(
+    radial_positions,
+    heat_flux,
+    r_sep,
+    distance,
+    sol_heat_flux,
+    q0,
+    lambda_q,
+    run_name,
+):
+    # Plot the OMP profile and the exponential fit in the SOL.
+    relative_radius = radial_positions - r_sep
+    valid_profile = (
+        (heat_flux > 0.0)
+        & np.isfinite(relative_radius)
+        & np.isfinite(heat_flux)
+    )
+
+    fit_radius = np.linspace(0.0, np.max(distance), 300)
+    fitted_heat_flux = q0 * np.exp(-fit_radius / lambda_q)
+
+    figure, axis = plt.subplots(figsize=(9, 6))
+    axis.semilogy(
+        relative_radius[valid_profile],
+        heat_flux[valid_profile],
+        "o-",
+        color="0.65",
+        markersize=4,
+        linewidth=1,
+        label="OMP profile",
+    )
+    axis.semilogy(
+        distance,
+        sol_heat_flux,
+        "o",
+        color="tab:blue",
+        markersize=6,
+        label="SOL data used in fit",
+    )
+    axis.semilogy(
+        fit_radius,
+        fitted_heat_flux,
+        "-",
+        color="tab:red",
+        linewidth=2,
+        label=rf"Fit: $\lambda_q={lambda_q * 1000.0:.3f}$ mm",
+    )
+    axis.axvline(0.0, color="black", linestyle="--", label="Separatrix")
+    axis.set_xlabel(r"$r=R-R_{\mathrm{sep}}$ (m)")
+    axis.set_ylabel(r"$|QPARTOT|$ (W/m$^2$)")
+    axis.set_title(f"Outer-midplane QPARTOT fit - {run_name}")
+    axis.grid(True, which="both", alpha=0.3)
+    axis.legend(loc="best")
+    figure.tight_layout()
+    return figure, axis
+
+
 def analyze_run(run_name):
     # Load the run and calculate lambda_q.
     run_path = find_run_directory(run_name)
@@ -255,8 +315,20 @@ def analyze_run(run_name):
     data = load_edge2d_data(tran_file)
     r_sep = outer_separatrix_radius(data["separatrix"], data["z0"])
     radial_positions, heat_flux = outer_midplane_profile(data)
-    lambda_q = fit_lambda_q(radial_positions, heat_flux, r_sep)
+    lambda_q, q0, distance, sol_heat_flux = fit_lambda_q(
+        radial_positions, heat_flux, r_sep
+    )
     plot_qpartot(data, run_name, r_sep)
+    plot_lambda_q_fit(
+        radial_positions,
+        heat_flux,
+        r_sep,
+        distance,
+        sol_heat_flux,
+        q0,
+        lambda_q,
+        run_name,
+    )
     return lambda_q, r_sep, data["z0"]
 
 def main():
@@ -269,7 +341,7 @@ def main():
 
     print(f"Z0 = {z0:.6f} m")
     print(f"Outer separatrix at Z0: R = {r_sep:.6f} m")
-    print(f"lambda_q = {lambda_q:.6f} m = {lambda_q * 1000.0:.3f} mm")
+    print(f"lambda_q = {lambda_q * 1000.0:.3f} mm")
     plt.show()
     return 0
 
