@@ -1,6 +1,6 @@
 """
 Author: Rachele Cicioni
-last update: 21-07-2026
+last update: 23-07-2026
 
 Calculate lambda_q and plot the EDGE2D QPARTOT map.
 
