@@ -36,9 +36,37 @@ import numpy as np
 from matplotlib.collections import PolyCollection
 from scipy.spatial import cKDTree
 
-from available_data_run import ask_run_name, find_run_directory
-
 PROFILE = "QPARTOT"
+
+
+def ask_run_name(prompt="Run name: "):
+    # Ask until a non-empty run name is entered.
+    while True:
+        run_name = input(prompt).strip()
+        if run_name:
+            return run_name
+        print("The run name cannot be empty.")
+
+
+def find_run_directory(run_name):
+    # Search the standard JDC and EFGW run directories.
+    potential_paths = [
+        f"/common/cmg/jnv7243/jetto/runs/{run_name}",
+        f"/pfs/work/g2rcicio/jetto/runs/{run_name}",
+        f"/common/cmg/jnv7243/edge2d/runs/{run_name}",
+        f"/pfs/work/g2rcicio/edge2d/runs/{run_name}",
+    ]
+
+    for path in potential_paths:
+        if os.path.isdir(path):
+            print(f"Run found at: {path}")
+            return path
+
+    raise FileNotFoundError(
+        f"Run '{run_name}' not found in any expected location:\n"
+        + "\n".join(potential_paths)
+    )
+
 
 def read_signal(tran_file, signal):
     # Read the valid points of an EPROC signal.
